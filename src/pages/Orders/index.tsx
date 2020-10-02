@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Image } from 'react-native';
 
 import api from '../../services/api';
@@ -18,25 +19,53 @@ import {
   FoodPricing,
 } from './styles';
 
-interface Food {
+interface FoodItem {
   id: number;
   name: string;
   description: string;
   price: number;
-  formattedValue: number;
+  formattedValue: string;
   thumbnail_url: string;
 }
 
 const Orders: React.FC = () => {
-  const [orders, setOrders] = useState<Food[]>([]);
+  const [orders, setOrders] = useState<FoodItem[]>([]);
 
   useEffect(() => {
     async function loadOrders(): Promise<void> {
-      // Load orders from API
+      const response = await api.get('orders');
+
+      setOrders([
+        ...response.data.map((order: FoodItem) => {
+          return {
+            ...order,
+            formattedValue: formatValue(order.price),
+          };
+        }),
+      ]);
     }
 
     loadOrders();
   }, []);
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     async function loadOrders(): Promise<void> {
+  //       const response = await api.get('orders');
+
+  //       setOrders([
+  //         ...response.data.map((order: FoodItem) => {
+  //           return {
+  //             ...order,
+  //             formattedValue: formatValue(order.price),
+  //           };
+  //         }),
+  //       ]);
+  //     }
+
+  //     loadOrders();
+  //   }, []),
+  // );
 
   return (
     <Container>
@@ -59,7 +88,7 @@ const Orders: React.FC = () => {
               <FoodContent>
                 <FoodTitle>{item.name}</FoodTitle>
                 <FoodDescription>{item.description}</FoodDescription>
-                <FoodPricing>{item.formattedPrice}</FoodPricing>
+                <FoodPricing>{item.formattedValue}</FoodPricing>
               </FoodContent>
             </Food>
           )}
